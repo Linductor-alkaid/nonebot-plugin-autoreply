@@ -1,0 +1,36 @@
+[
+    {
+        "title": "",
+        "time": "2024-08-09 20:33:37",
+        "content": [
+            {
+                "role": "system",
+                "content": ""
+            },
+            {
+                "role": "user",
+                "content": "/echo 你好，世界"
+            },
+            {
+                "role": "assistant",
+                "content": "你好，世界！"
+            },
+            {
+                "role": "user",
+                "content": "哇"
+            },
+            {
+                "role": "assistant",
+                "content": "有什么需要我帮忙的吗？"
+            },
+            {
+                "role": "user",
+                "content": "酷"
+            },
+            {
+                "role": "assistant",
+                "content": "谢谢，我会尽力为您提供最好的服务。"
+            }
+        ]
+    }
+]
