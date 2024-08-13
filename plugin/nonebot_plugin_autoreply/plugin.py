@@ -102,5 +102,5 @@ async def handle_chat(event: GroupMessageEvent | PrivateMessageEvent):
     train_model(data_file)
 
     # 生成并发送回复
-    response = generate_response(model, tokenizer, user_data[user_id])
-    await chat_listener.finish(response)
+    # response = generate_response(model, tokenizer, user_data[user_id])
+    # await chat_listener.finish(response)
