@@ -8,6 +8,11 @@ from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, PrivateMessa
 from nonebot.plugin import PluginMetadata
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
+from PIL import Image
+import pytesseract
+import requests
+from io import BytesIO
+
 from .utils.data_handler import save_chat_data
 from .data.model.trainer import train_model, load_model
 from .utils.model_handler import load_gpt_model, save_gpt_model
@@ -67,8 +72,25 @@ chat_listener = on_message()
 async def handle_chat(event: GroupMessageEvent | PrivateMessageEvent):
     user_id = event.user_id
     group_id = event.group_id if isinstance(event, GroupMessageEvent) else None
-    message = event.get_plaintext()
+    message = event.message
     timestamp = datetime.now().isoformat()
+
+    # 初始化要记录的消息内容
+    recorded_message = ""
+
+    # 处理不同类型的消息段
+    for seg in message:
+        if seg.type == "text":
+            # 如果是文字消息，直接记录
+            recorded_message += seg.data["text"]
+        elif seg.type == "image":
+            # 如果是图片消息，获取图片URL并进行OCR
+            image_url = seg.data["url"]
+            image_content = requests.get(image_url).content
+            image = Image.open(BytesIO(image_content))
+            # 使用 pytesseract 提取图片中的文字
+            image_text = pytesseract.image_to_string(image)
+            recorded_message += f"\n[Image Text]: {image_text}"
 
     # 计算与上次发言的时间差
     current_time = time.time()
@@ -81,7 +103,7 @@ async def handle_chat(event: GroupMessageEvent | PrivateMessageEvent):
     chat_data = {
         "user_id": user_id,
         "group_id": group_id,
-        "message": message,
+        "message": recorded_message,
         "timestamp": timestamp,
         "time_diff": time_diff
     }
@@ -89,7 +111,7 @@ async def handle_chat(event: GroupMessageEvent | PrivateMessageEvent):
 
     # 更新用户数据
     user_data[user_id] = {
-        "last_message": message,
+        "last_message": recorded_message,
         "last_time": current_time,
         "time_diff": time_diff
     }
