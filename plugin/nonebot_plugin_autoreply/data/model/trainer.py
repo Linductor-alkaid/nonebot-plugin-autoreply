@@ -1,3 +1,4 @@
+import os
 import json
 import pickle
 from pathlib import Path
@@ -5,6 +6,35 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer, AdamW
 
 # 定义模型文件路径
 model_file = Path(__file__).parent / "chat_model.pkl"
+pretrain_data_folder = Path(__file__).parent.parent / "data" / "pretrain"
+
+def pretrain_model():
+    """
+    使用大量文本数据对 GPT 模型进行预训练。
+    """
+    # 加载模型和分词器
+    model, tokenizer = load_model()
+
+    # 收集所有文本数据
+    texts = []
+    for file_name in os.listdir(pretrain_data_folder):
+        with open(pretrain_data_folder / file_name, 'r', encoding='utf-8') as f:
+            texts.append(f.read())
+
+    # 训练 GPT 模型
+    model.train()
+    optimizer = AdamW(model.parameters(), lr=1e-5)
+
+    for text in texts:
+        inputs = tokenizer.encode(text, return_tensors='pt')
+        outputs = model(inputs, labels=inputs)
+        loss = outputs.loss
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
+    # 保存预训练后的模型
+    save_model(model, tokenizer)
 
 def train_model(data_file: Path):
     """
@@ -16,11 +46,13 @@ def train_model(data_file: Path):
     model, tokenizer = load_model()
 
     # 从数据文件中加载聊天数据
-    with open(data_file, 'r') as f:
+    with open(data_file, 'r', encoding='utf-8') as f:
         chat_data = json.load(f)
 
-    # 模拟的训练逻辑（这里需要根据实际需求进行实现）
-    training_data = []
+    # 模拟的训练逻辑
+    model.train()
+    optimizer = AdamW(model.parameters(), lr=1e-5)
+
     for entry in chat_data:
         user_id = entry['user_id']
         message = entry['message']
@@ -30,12 +62,6 @@ def train_model(data_file: Path):
         input_text = f"User said: {message} " \
                      f"Time since last message: {time_diff} seconds."
         inputs = tokenizer.encode(input_text, return_tensors='pt')
-        training_data.append(inputs)
-    
-    # 训练 GPT 模型
-    model.train()
-    optimizer = AdamW(model.parameters(), lr=1e-5)
-    for inputs in training_data:
         outputs = model(inputs, labels=inputs)
         loss = outputs.loss
         loss.backward()
@@ -68,11 +94,11 @@ def load_model():
 
 def save_model(model, tokenizer):
     """
-    将训练后的 GPT 模型和分词器保存到文件。
+    将训练后的 GPT 模型保存到文件。
     
     :param model: 训练后的 GPT 模型
     :param tokenizer: GPT 模型的分词器
     """
     with open(model_file, 'wb') as f:
         pickle.dump(model, f)
-    # 注意：tokenizer 不需要保存，通常可以从预训练模型中重新加载
+    # 注意：分词器（tokenizer）不需要保存，通常可以从预训练模型中重新加载
