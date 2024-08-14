@@ -45,8 +45,15 @@
    ```bash
    pip install tensorflow
    ```
+4. 安装本地模型库：
 
-4. 将插件加载到 NoneBot2 项目中：
+   执行./data/model/getmodel.py
+
+   ```bash
+   python3 getmodel.py
+   ```
+
+5. 将插件加载到 NoneBot2 项目中：
 
    在你的 NoneBot2 项目的 `bot.py` 中添加：
 
