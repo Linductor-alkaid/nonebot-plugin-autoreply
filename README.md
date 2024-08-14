@@ -94,6 +94,7 @@ nonebot-plugin-autoreply/
 │   │   ├── user_data.json       # 持久化用户发言频率和时机数据
 │   │   ├── pretrain/            # 预训练文本接口文件夹（在该文件夹中放入txt文件即可预训练）
 │   │   └── model/               # 模型存储目录
+│   │       ├── getmodel.py      # 获取训练模型
 │   │       ├── chat_model.pkl   # 训练好的 GPT 模型文件
 │   │       └── trainer.py       # 模型训练与更新逻辑
 │   ├── utils/                   # 工具模块
