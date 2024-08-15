@@ -63,13 +63,16 @@ def train_model(data_file: Path):
         user_id = entry.get('user_id', 'unknown')
         message = entry.get('message', '')
         time_diff = entry.get('time_diff', 0)  # 设置默认值为 0
+        relevance = entry.get('relevance', 1.0)  # 获取话题相关性权重，默认为 1.0
         
         # 构建训练输入，包含用户的消息和与上次消息的时间差
         input_text = f"User said: {message} " \
                      f"Time since last message: {time_diff} seconds."
         inputs = tokenizer.encode(input_text, return_tensors='pt').to(device)
+
+        # 计算损失时考虑相关性权重
         outputs = model(inputs, labels=inputs)
-        loss = outputs.loss
+        loss = outputs.loss * relevance
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
@@ -102,3 +105,4 @@ def save_model(model, tokenizer):
     """
     model.save_pretrained(model_dir)
     tokenizer.save_pretrained(tokenizer_dir)
+

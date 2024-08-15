@@ -12,8 +12,17 @@ def load_gpt_model():
     
     :return: GPT 模型和分词器
     """
-    model = GPT2LMHeadModel.from_pretrained(model_file)
-    tokenizer = GPT2Tokenizer.from_pretrained(tokenizer_dir)
+    if model_file.exists() and tokenizer_dir.exists():
+        model = GPT2LMHeadModel.from_pretrained(model_file)
+        tokenizer = GPT2Tokenizer.from_pretrained(tokenizer_dir)
+    else:
+        # 如果模型文件不存在，加载预训练的 GPT-2 模型
+        model = GPT2LMHeadModel.from_pretrained("gpt2")
+        tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    
+    # 将模型移动到 GPU（如果可用）
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
     
     return model, tokenizer
 
@@ -23,8 +32,7 @@ def save_gpt_model(model):
     
     :param model: 训练后的 GPT 模型
     """
-    with open(model_file, 'wb') as f:
-        torch.save(model, f)
+    model.save_pretrained(model_file)
 
 def update_model(new_data: dict, model, tokenizer):
     """
@@ -41,8 +49,10 @@ def update_model(new_data: dict, model, tokenizer):
     # 构建训练输入，包含用户的消息和与上次消息的时间差
     input_text = f"User said: {new_data['message']} " \
                  f"Time since last message: {new_data['time_diff']} seconds."
-    inputs = tokenizer.encode(input_text, return_tensors='pt')
 
+    inputs = tokenizer.encode(input_text, return_tensors='pt', padding=True, truncation=True)
+    inputs = inputs.to(model.device)  # 将输入数据移动到同一个设备（GPU或CPU）
+    
     outputs = model(inputs, labels=inputs)
     loss = outputs.loss
     loss.backward()
